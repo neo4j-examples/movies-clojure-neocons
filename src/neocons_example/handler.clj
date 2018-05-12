@@ -8,9 +8,12 @@
             [ring.middleware.json             :as rj]
             [compojure.route                  :as route]))
 
+; change to your database credentials
+(def credentials
+  {:username "neo4j"
+   :password "abc"})
 
-(def conn (nr/connect "http://localhost:7474/db/data/"))
-
+(def conn (nr/connect "http://localhost:7474/db/data/" (:username credentials) (:password credentials)))
 
 (def graph-query "MATCH (m:Movie)<-[:ACTED_IN]-(a:Person)
                   RETURN m.title as movie, collect(a.name) as cast
@@ -45,10 +48,8 @@
 
 (defn get-search
   [q]
-  (if (blank? q)
-    []
-    (let  [result  (cy/tquery conn search-query {:title (str "(?i).*" q ".*")})]
-      (map (fn [x] {:movie (:data (x "movie"))}) result))))
+  (let  [result  (cy/tquery conn search-query {:title (str "(?i).*" q ".*")})]
+    (map (fn [x] {:movie (:data (x "movie"))}) result)))
 
 
 (def title-query "MATCH (movie:Movie {title:{title}})
